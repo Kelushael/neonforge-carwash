@@ -1,0 +1,6 @@
+python-osc
+textual
+openai-whisper
+anthropic
+sounddevice
+numpy

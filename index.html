@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARWASH</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #080808;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 120px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+h1 { color: #00ff88; font-size: 1.6em; letter-spacing: 4px; margin-bottom: 4px; }
+.sub { color: #333; font-size: 0.72em; margin-bottom: 28px; }
+
+/* DROP */
+#dropzone {
+  width: 100%;
+  border: 2px dashed #222;
+  border-radius: 10px;
+  padding: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 0.85em;
+}
+#dropzone.over    { border-color: #00ff88; background: #0d1a12; color: #00ff88; }
+#dropzone.loaded  { border-color: #00ff88; color: #aaa; padding: 20px; }
+#dropzone .icon   { font-size: 1.8em; margin-bottom: 6px; }
+#dropzone .hint   { font-size: 0.7em; margin-top: 4px; color: #333; }
+#file-input { display: none; }
+
+/* RECEIPT */
+#receipt {
+  width: 100%;
+  background: #0a0f0a;
+  border: 1px solid #1a2a1a;
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: none;
+  font-size: 0.72em;
+  line-height: 1.8;
+}
+#receipt .stage { color: #00ff88; font-size: 0.85em; letter-spacing: 2px; margin-bottom: 6px; }
+#receipt .item  { color: #666; }
+#receipt .item span { color: #aaa; }
+#receipt.visible { display: block; }
+
+/* DIVIDER */
+.divider { width: 100%; border: none; border-top: 1px solid #111; margin: 4px 0 20px; }
+
+/* STYLE SECTION */
+#style-section { width: 100%; display: none; }
+#style-section.visible { display: block; }
+.section-label { font-size: 0.65em; letter-spacing: 3px; color: #333; margin-bottom: 12px; }
+
+/* SLIDERS */
+.style-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.style-name {
+  font-size: 0.72em;
+  color: #555;
+  width: 110px;
+  flex-shrink: 0;
+}
+.style-name span { display: block; font-size: 0.8em; color: #333; margin-top: 1px; }
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 2px;
+  background: #222;
+  border-radius: 1px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #00ff88;
+  cursor: pointer;
+}
+input[type=range].purple::-webkit-slider-thumb { background: #aa44ff; }
+.style-val { font-size: 0.7em; color: #444; width: 32px; text-align: right; }
+
+/* FX TOGGLES */
+.fx-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.fx-toggle {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 0.7em;
+  cursor: pointer;
+  color: #444;
+  font-family: 'Courier New', monospace;
+  transition: all 0.15s;
+  letter-spacing: 1px;
+}
+.fx-toggle:hover { border-color: #333; color: #666; }
+.fx-toggle.on { border-color: #aa44ff; color: #aa44ff; background: #0f0a1a; }
+
+/* TRANSPORT */
+#transport {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  align-items: center;
+}
+.tbtn {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  color: #666;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8em;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tbtn:hover { color: #fff; border-color: #444; }
+#play-btn.playing { color: #00ff88; border-color: #00ff88; }
+
+/* PROGRESS */
+#progress-wrap {
+  width: 100%;
+  height: 3px;
+  background: #1a1a1a;
+  border-radius: 2px;
+  margin-bottom: 24px;
+  cursor: pointer;
+}
+#progress-bar { height: 100%; background: #00ff88; border-radius: 2px; width: 0%; pointer-events: none; }
+
+/* SAVE */
+#save-section {
+  width: 100%;
+  display: none;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+#save-section.visible { display: flex; }
+#sound-name {
+  flex: 1;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  color: #fff;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8em;
+  padding: 10px 14px;
+  outline: none;
+}
+#sound-name:focus { border-color: #00ff88; }
+#sound-name::placeholder { color: #333; }
+#save-btn {
+  background: #0d1a12;
+  border: 1px solid #00ff88;
+  border-radius: 6px;
+  color: #00ff88;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8em;
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+/* SAVED SOUNDS */
+#saved-list { width: 100%; }
+.saved-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #111;
+  font-size: 0.72em;
+}
+.saved-item .sname { flex: 1; color: #aaa; cursor: pointer; }
+.saved-item .sname:hover { color: #00ff88; }
+.saved-item .sdel { color: #333; cursor: pointer; }
+.saved-item .sdel:hover { color: #ff4444; }
+
+#status { width: 100%; font-size: 0.68em; color: #333; text-align: center; min-height: 18px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>◈ CARWASH</h1>
+<div class="sub">align · seal · style · save</div>
+
+<div id="dropzone">
+  <div class="icon">⬇</div>
+  <div>DROP AUDIO HERE</div>
+  <div class="hint">wav · mp3 · m4a · anything</div>
+</div>
+<input type="file" id="file-input" accept="audio/*">
+
+<div id="receipt"></div>
+
+<hr class="divider">
+
+<div id="style-section">
+  <div class="section-label">STYLE — ADD ONLY WHAT ISN'T THERE</div>
+
+  <div class="style-row">
+    <div class="style-name">HIDDEN WET<span>felt not heard</span></div>
+    <input type="range" id="s-wet" min="0" max="100" value="0" class="purple">
+    <div class="style-val" id="v-wet">0</div>
+  </div>
+
+  <div class="style-row">
+    <div class="style-name">SPACE SIZE<span>room → infinite</span></div>
+    <input type="range" id="s-room" min="0" max="100" value="0" class="purple">
+    <div class="style-val" id="v-room">0</div>
+  </div>
+
+  <div class="style-row">
+    <div class="style-name">PITCH<span>down = darker</span></div>
+    <input type="range" id="s-pitch" min="-12" max="0" value="0">
+    <div class="style-val" id="v-pitch">0</div>
+  </div>
+
+  <div class="style-row">
+    <div class="style-name">WIDTH<span>mono → wide</span></div>
+    <input type="range" id="s-wide" min="0" max="100" value="0" class="purple">
+    <div class="style-val" id="v-wide">0</div>
+  </div>
+
+  <div class="style-row">
+    <div class="style-name">DRIVE<span>clean → colored</span></div>
+    <input type="range" id="s-drive" min="0" max="100" value="0">
+    <div class="style-val" id="v-drive">0</div>
+  </div>
+
+  <div class="section-label" style="margin-top:8px">TEXTURE FX</div>
+  <div class="fx-row">
+    <button class="fx-toggle" id="fx-gate">GATED</button>
+    <button class="fx-toggle" id="fx-reverse">REVERSE VERB</button>
+    <button class="fx-toggle" id="fx-chop">CHOPPED</button>
+    <button class="fx-toggle" id="fx-stutter">STUTTER</button>
+  </div>
+
+  <hr class="divider">
+</div>
+
+<div id="transport">
+  <button class="tbtn" id="play-btn">▶ PLAY</button>
+  <button class="tbtn" id="stop-btn">■ STOP</button>
+  <button class="tbtn" id="bypass-btn">BYPASS</button>
+</div>
+
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<div id="save-section">
+  <input type="text" id="sound-name" placeholder="name this sound...">
+  <button id="save-btn">SAVE SOUND</button>
+</div>
+
+<div id="saved-list"></div>
+<div id="status">drop a file to begin</div>
+
+<script>
+let ctx, sourceBuffer, isPlaying = false, bypass = false;
+let startTime = 0, pauseOffset = 0, raf;
+let nodes = {};
+let alignParams = { gain: 1.0, hpFreq: 80, sealComp: false };
+let savedSounds = JSON.parse(localStorage.getItem('carwash_sounds') || '[]');
+
+// ── Analysis + Auto Align/Seal ───────────────────────────────────────────────
+function analyze(buf, filename) {
+  const ch  = buf.getChannelData(0);
+  const len = Math.min(ch.length, buf.sampleRate * 20);
+
+  let rmsSum = 0, peak = 0;
+  for (let i = 0; i < len; i++) {
+    rmsSum += ch[i] * ch[i];
+    if (Math.abs(ch[i]) > peak) peak = Math.abs(ch[i]);
+  }
+  const rms     = Math.sqrt(rmsSum / len);
+  const rmsDb   = 20 * Math.log10(rms   + 1e-9);
+  const peakDb  = 20 * Math.log10(peak  + 1e-9);
+  const dynamic = peakDb - rmsDb;
+
+  const targetRmsDb = -18.0;
+  const gainDb  = targetRmsDb - rmsDb;
+  const gainLin = Math.pow(10, gainDb / 20);
+
+  // spectral tilt — estimate low mud
+  const slice = ch.slice(0, buf.sampleRate * 5);
+  let lowEnergy = 0, midEnergy = 0;
+  for (let i = 0; i < slice.length; i++) {
+    const v = Math.abs(slice[i]);
+    if (i % 4 === 0) lowEnergy += v;
+    else midEnergy += v;
+  }
+  const muddy   = lowEnergy > midEnergy * 0.6;
+  const hpFreq  = muddy ? 120 : 80;
+  const alreadyMixed = peakDb > -3 && rmsDb > -30;
+  const needsSeal    = dynamic < 18;
+
+  alignParams = { gain: alreadyMixed ? 1.0 : gainLin, hpFreq, sealComp: !alreadyMixed && needsSeal };
+
+  // receipt
+  const r = document.getElementById('receipt');
+  r.className = 'visible';
+
+  const alignLines = alreadyMixed
+    ? `<div class="item">● <span>already at mix level (${rmsDb.toFixed(1)} dBFS) — no gain needed</span></div>
+       <div class="item">● <span>corrective processing skipped</span></div>`
+    : `<div class="item">● <span>gain ${gainDb > 0 ? '+' : ''}${gainDb.toFixed(1)} dB → target −18 dBFS</span></div>
+       <div class="item">● <span>high pass at ${hpFreq}Hz ${muddy ? '(mud detected)' : ''}</span></div>
+       ${needsSeal ? '<div class="item">● <span>transparency comp applied (seal)</span></div>' : ''}`;
+
+  r.innerHTML = `
+    <div class="stage">▸ AUTO ALIGN ${alreadyMixed ? '(bypassed — already clean)' : '(applied)'}</div>
+    ${alignLines}
+    <div class="stage" style="margin-top:10px">▸ SEALED</div>
+    <div class="item">● <span>clarity locked · add style below</span></div>
+  `;
+
+  document.getElementById('style-section').className = 'visible';
+  document.getElementById('save-section').className  = 'visible';
+
+  const dz = document.getElementById('dropzone');
+  dz.classList.add('loaded');
+  dz.innerHTML = `<div class="icon">✓</div><div>${filename}</div>
+    <div class="hint">${buf.duration.toFixed(1)}s · peak ${peakDb.toFixed(1)}dBFS · rms ${rmsDb.toFixed(1)}dBFS${alreadyMixed ? ' · already mixed' : ''}</div>`;
+
+  setStatus(alreadyMixed ? 'mix detected — style only mode' : 'aligned + sealed — add your style');
+  renderSaved();
+}
+
+// ── Build chain ──────────────────────────────────────────────────────────────
+function getStyleParams() {
+  return {
+    wet:   parseInt(document.getElementById('s-wet').value)   / 100,
+    room:  parseInt(document.getElementById('s-room').value)  / 100,
+    pitch: parseFloat(document.getElementById('s-pitch').value),
+    wide:  parseInt(document.getElementById('s-wide').value)  / 100,
+    drive: parseInt(document.getElementById('s-drive').value) / 100,
+    gated:   document.getElementById('fx-gate').classList.contains('on'),
+    reverse: document.getElementById('fx-reverse').classList.contains('on'),
+    chopped: document.getElementById('fx-chop').classList.contains('on'),
+    stutter: document.getElementById('fx-stutter').classList.contains('on'),
+  };
+}
+
+function buildChain() {
+  if (nodes.src) { try { nodes.src.stop(); } catch(e){} }
+  ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+  const s = getStyleParams();
+
+  const src     = ctx.createBufferSource();
+  const inGain  = ctx.createGain();
+  const hp      = ctx.createBiquadFilter();
+  const comp    = ctx.createDynamicsCompressor();
+  const wave    = ctx.createWaveShaper();
+  const convDry = ctx.createGain();
+  const convWet = ctx.createGain();
+  const reverb  = ctx.createConvolver();
+  const outGain = ctx.createGain();
+
+  src.buffer = sourceBuffer;
+  src.loop = true;
+  src.playbackRate.value = s.chopped ? 0.72 : Math.pow(2, s.pitch / 12);
+
+  inGain.gain.value = bypass ? 1.0 : alignParams.gain;
+
+  hp.type = 'highpass';
+  hp.frequency.value = bypass ? 20 : alignParams.hpFreq;
+  hp.Q.value = 0.7;
+
+  if (!bypass && alignParams.sealComp) {
+    comp.threshold.value = -24;
+    comp.ratio.value = 3;
+    comp.attack.value = 0.01;
+    comp.release.value = 0.15;
+    comp.knee.value = 8;
+  } else {
+    comp.threshold.value = 0;
+    comp.ratio.value = 1;
+  }
+
+  const dv = bypass ? 0 : s.drive * 20;
+  const curve = new Float32Array(512);
+  for (let i = 0; i < 512; i++) {
+    const x = (i * 2) / 512 - 1;
+    curve[i] = dv > 0 ? (Math.PI + dv) * x / (Math.PI + dv * Math.abs(x)) : x;
+  }
+  wave.curve = curve;
+
+  const reverbTime = bypass ? 0.01 : 0.1 + s.room * 6;
+  const wetLevel   = bypass ? 0    : s.wet  * 0.5;
+  const irLen = ctx.sampleRate * reverbTime;
+  const ir = ctx.createBuffer(2, Math.max(256, irLen), ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < d.length; i++) {
+      const t = i / d.length;
+      const env = s.reverse ? t : Math.pow(1 - t, 2.5);
+      d[i] = (Math.random() * 2 - 1) * env;
+    }
+  }
+  reverb.buffer = ir;
+  convDry.gain.value = 1 - wetLevel * 0.3;
+  convWet.gain.value = wetLevel;
+  outGain.gain.value = 1.0;
+
+  // connect
+  src.connect(inGain);
+  inGain.connect(hp);
+  hp.connect(comp);
+  comp.connect(wave);
+  wave.connect(convDry);
+  wave.connect(reverb);
+  reverb.connect(convWet);
+  convDry.connect(outGain);
+  convWet.connect(outGain);
+  outGain.connect(ctx.destination);
+
+  nodes = { src, inGain, hp, comp, wave, reverb, convDry, convWet, outGain };
+  return src;
+}
+
+// ── Transport ────────────────────────────────────────────────────────────────
+function play() {
+  if (!sourceBuffer) { setStatus('drop a file first'); return; }
+  ctx && ctx.resume();
+  const src = buildChain();
+  src.start(0, pauseOffset % sourceBuffer.duration);
+  startTime = ctx.currentTime - pauseOffset;
+  isPlaying = true;
+  document.getElementById('play-btn').textContent = '⏸ PAUSE';
+  document.getElementById('play-btn').classList.add('playing');
+  tick();
+}
+
+function pause() {
+  if (!isPlaying) return;
+  pauseOffset = (ctx.currentTime - startTime) % sourceBuffer.duration;
+  try { nodes.src.stop(); } catch(e){}
+  isPlaying = false;
+  cancelAnimationFrame(raf);
+  document.getElementById('play-btn').textContent = '▶ PLAY';
+  document.getElementById('play-btn').classList.remove('playing');
+}
+
+function stop() {
+  pause(); pauseOffset = 0;
+  document.getElementById('progress-bar').style.width = '0%';
+}
+
+function tick() {
+  if (!isPlaying) return;
+  const elapsed = (ctx.currentTime - startTime) % sourceBuffer.duration;
+  document.getElementById('progress-bar').style.width = (elapsed / sourceBuffer.duration * 100) + '%';
+  raf = requestAnimationFrame(tick);
+}
+
+function rebuildLive() {
+  if (!isPlaying || !sourceBuffer) return;
+  pauseOffset = (ctx.currentTime - startTime) % sourceBuffer.duration;
+  try { nodes.src.stop(); } catch(e){}
+  const src = buildChain();
+  src.start(0, pauseOffset);
+  startTime = ctx.currentTime - pauseOffset;
+}
+
+// ── Sliders ──────────────────────────────────────────────────────────────────
+['wet','room','pitch','wide','drive'].forEach(id => {
+  const el = document.getElementById('s-' + id);
+  const vl = document.getElementById('v-' + id);
+  el.addEventListener('input', () => {
+    vl.textContent = el.value;
+    rebuildLive();
+  });
+});
+
+// ── FX toggles ───────────────────────────────────────────────────────────────
+['fx-gate','fx-reverse','fx-chop','fx-stutter'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function() {
+    this.classList.toggle('on');
+    rebuildLive();
+  });
+});
+
+// ── Transport events ─────────────────────────────────────────────────────────
+document.getElementById('play-btn').addEventListener('click', () => isPlaying ? pause() : play());
+document.getElementById('stop-btn').addEventListener('click', stop);
+document.getElementById('bypass-btn').addEventListener('click', function() {
+  bypass = !bypass;
+  this.textContent = bypass ? 'BYPASS ON' : 'BYPASS';
+  this.style.color = bypass ? '#ff6644' : '';
+  this.style.borderColor = bypass ? '#ff6644' : '';
+  rebuildLive();
+});
+
+document.getElementById('progress-wrap').addEventListener('click', e => {
+  if (!sourceBuffer) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  pauseOffset = ((e.clientX - r.left) / r.width) * sourceBuffer.duration;
+  if (isPlaying) { try { nodes.src.stop(); } catch(e){} const s = buildChain(); s.start(0, pauseOffset); startTime = ctx.currentTime - pauseOffset; }
+});
+
+// ── Save / Load sounds ───────────────────────────────────────────────────────
+document.getElementById('save-btn').addEventListener('click', () => {
+  const name = document.getElementById('sound-name').value.trim();
+  if (!name) { setStatus('give it a name first'); return; }
+  const sound = { name, params: getStyleParams(), align: alignParams, ts: Date.now() };
+  savedSounds = savedSounds.filter(s => s.name !== name);
+  savedSounds.unshift(sound);
+  localStorage.setItem('carwash_sounds', JSON.stringify(savedSounds));
+  document.getElementById('sound-name').value = '';
+  renderSaved();
+  setStatus(`saved: "${name}"`);
+  // also POST to server
+  fetch('/upload', { method: 'POST', body: (() => { const f = new FormData(); f.append('file', new Blob([JSON.stringify(sound)], {type:'application/json'}), name + '.sound.json'); return f; })() }).catch(()=>{});
+});
+
+function loadSound(sound) {
+  const p = sound.params;
+  document.getElementById('s-wet').value   = Math.round(p.wet   * 100);
+  document.getElementById('s-room').value  = Math.round(p.room  * 100);
+  document.getElementById('s-pitch').value = p.pitch;
+  document.getElementById('s-wide').value  = Math.round(p.wide  * 100);
+  document.getElementById('s-drive').value = Math.round(p.drive * 100);
+  ['wet','room','pitch','wide','drive'].forEach(id => {
+    const el = document.getElementById('s-' + id);
+    document.getElementById('v-' + id).textContent = el.value;
+  });
+  ['gate','reverse','chop','stutter'].forEach(id => {
+    const el = document.getElementById('fx-' + id);
+    const key = id === 'chop' ? 'chopped' : id === 'gate' ? 'gated' : id;
+    el.classList.toggle('on', !!p[key]);
+  });
+  alignParams = sound.align || alignParams;
+  rebuildLive();
+  setStatus(`loaded: "${sound.name}"`);
+}
+
+function renderSaved() {
+  const list = document.getElementById('saved-list');
+  if (!savedSounds.length) { list.innerHTML = ''; return; }
+  list.innerHTML = savedSounds.map((s, i) => `
+    <div class="saved-item">
+      <div class="sname" data-i="${i}">◈ ${s.name}</div>
+      <div class="sdel" data-i="${i}">✕</div>
+    </div>
+  `).join('');
+  list.querySelectorAll('.sname').forEach(el => {
+    el.addEventListener('click', () => loadSound(savedSounds[parseInt(el.dataset.i)]));
+  });
+  list.querySelectorAll('.sdel').forEach(el => {
+    el.addEventListener('click', () => {
+      savedSounds.splice(parseInt(el.dataset.i), 1);
+      localStorage.setItem('carwash_sounds', JSON.stringify(savedSounds));
+      renderSaved();
+    });
+  });
+}
+
+// ── File load ────────────────────────────────────────────────────────────────
+function loadFile(file) {
+  setStatus('uploading...');
+  const form = new FormData();
+  form.append('file', file);
+  fetch('/upload', { method:'POST', body:form }).catch(()=>{});
+  const reader = new FileReader();
+  reader.onload = e => {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    ctx.decodeAudioData(e.target.result, buf => {
+      sourceBuffer = buf;
+      analyze(buf, file.name);
+    }, () => setStatus('could not decode audio'));
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+const dz = document.getElementById('dropzone');
+dz.addEventListener('click',      () => document.getElementById('file-input').click());
+dz.addEventListener('dragover',   e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave',  () => dz.classList.remove('over'));
+dz.addEventListener('drop',       e => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); });
+document.getElementById('file-input').addEventListener('change', e => { if (e.target.files[0]) loadFile(e.target.files[0]); });
+
+function setStatus(t) { document.getElementById('status').textContent = t; }
+
+renderSaved();
+</script>
+</body>
+</html>

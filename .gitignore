@@ -1,0 +1,9 @@
+*.wav
+*.mp3
+*.m4a
+*.flac
+__pycache__/
+carwash_env/
+*.pyc
+*.sound.json
+.env
